@@ -1,15 +1,15 @@
 import { error } from '@sveltejs/kit';
 import { getProjectBySlug } from '$lib/firebase/projectService';
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params }) => {
   try {
     const project = await getProjectBySlug(params.slug);
-    
+
     if (!project) {
       throw error(404, 'Project not found');
     }
-    
+
     return {
       project
     };

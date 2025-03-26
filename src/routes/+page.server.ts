@@ -11,6 +11,8 @@ export const load: PageLoad = async ({ url }) => {
       getCategories()
     ]);
 
+    console.log(projects)
+    console.log(categories)
     return {
       projects,
       categories,

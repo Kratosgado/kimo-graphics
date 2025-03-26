@@ -83,7 +83,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
 
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
-      return { id: doc.id, ...doc.data() } as Project;
+      return { id: doc.id, ...parseDate(doc.data()) } as Project;
     } else {
       return null;
     }
