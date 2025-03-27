@@ -1,35 +1,40 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
-	import type { PageData } from './$types';
 	import type { Project, Category } from '$lib/types';
+	import { page } from '$app/state';
+	import { getCategories, getProjects } from '$lib';
 
-	export let data: { projects: Project[]; categories: Category[]; categorySlug: string };
+	// let data: { projects: Project[]; categories: Category[]; categoryslug: string } = $props();
+	let isLoaded = $state(false);
+	// let { projects, categories, categoryslug } = data;
 
-	let { projects, categories, categorySlug } = data;
-
-	$: filteredProjects = filterProjects(projects, categorySlug);
+	let projects: Project[] = $state([]);
+	let categories: Category[] = $state([]);
+	$inspect(`page svelte: ${page.url.searchParams.get('category')}`);
+	let filteredProjects = $derived(filterProjects(projects, page.url.searchParams.get('category')));
 
 	function filterProjects(projects: Project[], categorySlug: string | null): Project[] {
 		if (!categorySlug || categorySlug === 'all') {
 			return projects;
 		}
 
+		console.log('executing');
 		const category = categories.find((c) => c.slug === categorySlug);
 		if (!category) return projects;
 
 		return projects.filter((project) => project.categoryId === category.id);
 	}
 
-	let isLoaded = false;
+	onMount(async () => {
+		[projects, categories] = await Promise.all([getProjects(), getCategories()]);
 
-	onMount(() => {
 		isLoaded = true;
 	});
 </script>
 
 <svelte:head>
-	<title>DesignStudio | Creative Portfolio</title>
+	<title>Kimo Graphics | Creative Portfolio</title>
 	<meta
 		name="description"
 		content="Portfolio of a professional graphic designer specializing in branding, web design, print, and illustration."
@@ -57,7 +62,7 @@
 							<img
 								src={project.images && project.images.length > 0
 									? project.images[0].base64
-									: '/placeholder.svg?height=600&width=800'}
+									: '/favicon.png?height=600&width=800'}
 								alt={project.title}
 								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
 							/>
@@ -82,7 +87,7 @@
 		</div>
 	{/if}
 
-	{#if filteredProjects.length === 0}
+	{#if filteredProjects && filteredProjects.length === 0}
 		<div class="text-center py-20">
 			<h2 class="text-2xl font-bold mb-4">No projects found</h2>
 			<p class="text-base-content/70 mb-6">No projects match the selected category.</p>

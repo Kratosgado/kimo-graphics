@@ -5,6 +5,6 @@ import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 export default defineConfig({
 	plugins: [sveltekit(), purgeCss()],
 	server: {
-		port: 9000
+		port: 3000
 	}
 });

@@ -1,10 +1,11 @@
 <script>
-	import { page } from '$app/stores';
 	import { fade } from 'svelte/transition';
 	import '../app.css';
 	import { contact } from '$lib/details';
+	import { page } from '$app/state';
 
-	let isMenuOpen = false;
+	let { children } = $props();
+	let isMenuOpen = $state(false);
 
 	const toggleMenu = () => {
 		isMenuOpen = !isMenuOpen;
@@ -13,9 +14,9 @@
 	const categories = [
 		{ id: 'all', name: 'All Work' },
 		{ id: 'books', name: 'Books' },
-		{ id: 'web', name: 'Web Design' },
-		{ id: 'print', name: 'Print' },
-		{ id: 'illustration', name: 'Illustration' }
+		{ id: 'flyers', name: 'Flyers' },
+		{ id: 'merch', name: 'Merch' },
+		{ id: 'letterheads', name: 'Letter Heads' }
 	];
 </script>
 
@@ -31,7 +32,7 @@
 
 				<div class="navbar-end">
 					<!-- Mobile menu button -->
-					<button class="btn btn-ghost lg:hidden" on:click={toggleMenu}>
+					<button aria-label="toggle menu" class="btn btn-ghost lg:hidden" onclick={toggleMenu}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -52,7 +53,7 @@
 					<nav class="hidden lg:flex lg:items-center lg:space-x-8">
 						<a
 							href="/"
-							class="font-medium hover:text-primary transition-colors {$page.url.pathname === '/'
+							class="font-medium hover:text-primary transition-colors {page.url.pathname === '/'
 								? 'text-primary'
 								: ''}"
 						>
@@ -60,7 +61,7 @@
 						</a>
 						<a
 							href="/about"
-							class="font-medium hover:text-primary transition-colors {$page.url.pathname ===
+							class="font-medium hover:text-primary transition-colors {page.url.pathname ===
 							'/about'
 								? 'text-primary'
 								: ''}"
@@ -69,7 +70,7 @@
 						</a>
 						<a
 							href="/contact"
-							class="font-medium hover:text-primary transition-colors {$page.url.pathname ===
+							class="font-medium hover:text-primary transition-colors {page.url.pathname ===
 							'/contact'
 								? 'text-primary'
 								: ''}"
@@ -88,7 +89,7 @@
 				<nav class="flex flex-col space-y-4 p-4 bg-base-100 border-t border-base-200">
 					<a
 						href="/"
-						class="font-medium py-2 hover:text-primary transition-colors {$page.url.pathname === '/'
+						class="font-medium py-2 hover:text-primary transition-colors {page.url.pathname === '/'
 							? 'text-primary'
 							: ''}"
 					>
@@ -96,7 +97,7 @@
 					</a>
 					<a
 						href="/about"
-						class="font-medium py-2 hover:text-primary transition-colors {$page.url.pathname ===
+						class="font-medium py-2 hover:text-primary transition-colors {page.url.pathname ===
 						'/about'
 							? 'text-primary'
 							: ''}"
@@ -105,7 +106,7 @@
 					</a>
 					<a
 						href="/contact"
-						class="font-medium py-2 hover:text-primary transition-colors {$page.url.pathname ===
+						class="font-medium py-2 hover:text-primary transition-colors {page.url.pathname ===
 						'/contact'
 							? 'text-primary'
 							: ''}"
@@ -118,14 +119,14 @@
 		{/if}
 
 		<!-- Category filter (only on homepage) -->
-		{#if $page.url.pathname === '/'}
+		{#if page.url.pathname === '/'}
 			<div class="container mx-auto px-4 py-2 overflow-x-auto">
 				<div class="flex space-x-2">
 					{#each categories as category}
 						<a
 							href="/?category={category.id}"
-							class="btn btn-sm {$page.url.searchParams.get('category') === category.id ||
-							(!$page.url.searchParams.get('category') && category.id === 'all')
+							class="btn btn-sm {page.url.searchParams.get('category') === category.id ||
+							(!page.url.searchParams.get('category') && category.id === 'all')
 								? 'btn-primary'
 								: 'btn-ghost'}"
 						>
@@ -138,7 +139,7 @@
 	</header>
 
 	<main class="flex-grow">
-		<slot />
+		{@render children()}
 	</main>
 
 	<footer class="bg-base-200">
@@ -158,9 +159,15 @@
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Connect</h3>
 					<div class="flex space-x-4">
-						<a href="#" class="hover:text-primary transition-colors">Instagram</a>
-						<a href="#" class="hover:text-primary transition-colors">Dribbble</a>
-						<a href="#" class="hover:text-primary transition-colors">LinkedIn</a>
+						<a href={contact.social.instagram} class="hover:text-primary transition-colors"
+							>Instagram</a
+						>
+						<a href={contact.social.facebook} class="hover:text-primary transition-colors"
+							>Facebook</a
+						>
+						<a href={contact.social.pinterest} class="hover:text-primary transition-colors"
+							>Pinterest</a
+						>
 					</div>
 				</div>
 			</div>
