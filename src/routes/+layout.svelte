@@ -153,8 +153,8 @@
 				</div>
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Contact</h3>
-					<p class="mb-2">{contact.email}</p>
-					<p>{contact.phone}</p>
+					<p class="mb-2 text-primary">{contact.email}</p>
+					<p class="text-primary">{contact.phone}</p>
 				</div>
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Connect</h3>
