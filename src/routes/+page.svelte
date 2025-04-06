@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import type { Project, Category } from '$lib/types';
 	import { page } from '$app/state';
-	import { getCategories, getProjects } from '$lib';
+	import { getCategories, getFeaturedProjects, getProjects } from '$lib';
 
 	// let data: { projects: Project[]; categories: Category[]; categoryslug: string } = $props();
 	let isLoaded = $state(false);
@@ -26,7 +26,7 @@
 	}
 
 	onMount(async () => {
-		[projects, categories] = await Promise.all([getProjects(), getCategories()]);
+		[projects, categories] = await Promise.all([getFeaturedProjects(), getCategories()]);
 
 		isLoaded = true;
 	});

@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, getDoc, Timestamp, writeBatch, limit } from 'firebase/firestore';
 import type { ImageData, Project } from '$lib/types';
 
 const COLLECTION_NAME = 'projects';
@@ -102,10 +102,13 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   }
 }
 
-async function getImages(id: string): Promise<ImageData[]> {
+async function getImages(id: string, take?: number): Promise<ImageData[]> {
 
   try {
-    const q = query(collection(db, IMAGE_COLLECTION), where('projectId', '==', id))
+    let q = query(collection(db, IMAGE_COLLECTION), where('projectId', '==', id))
+    if (take) {
+      q = query(q, limit(take))
+    }
     const snapshots = await getDocs(q);
     const imgs: ImageData[] = snapshots.docs.map(d => {
       const data = d.data();
@@ -179,11 +182,16 @@ export async function getFeaturedProjects(): Promise<Project[]> {
   try {
     const q = query(collection(db, COLLECTION_NAME), where('featured', '==', true));
     const querySnapshot = await getDocs(q);
+    const projects: Project[] = [];
 
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Project));
+    querySnapshot.docs.map(async (doc) => {
+      projects.push({
+        ...doc.data(),
+        id: doc.id,
+        images: await getImages(doc.id, 1)
+      } as Project)
+    });
+    return projects;
   } catch (error) {
     console.error('Error getting featured projects:', error);
     throw error;
