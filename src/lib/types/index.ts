@@ -13,6 +13,7 @@ export interface ImageData {
   originalName: string;
   size: 'small' | 'medium' | 'large';
   mimeType: string;
+  status: 'new' | 'deleted' | 'exists';
 }
 
 export interface Project {

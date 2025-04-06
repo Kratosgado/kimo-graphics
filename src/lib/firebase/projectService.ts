@@ -1,6 +1,6 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, getDoc, Timestamp } from 'firebase/firestore';
-import type { Project } from '$lib/types';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import type { ImageData, Project } from '$lib/types';
 
 const COLLECTION_NAME = 'projects';
 const IMAGE_COLLECTION = 'images';
@@ -16,11 +16,24 @@ export function parseDate<T = Project>(data: any): T {
 
 export async function addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
   try {
+    const { images, ...rest } = project;
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-      ...project,
+      ...rest,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    const batch = writeBatch(db);
+    images.forEach((img) => {
+      const imgref = doc(db, IMAGE_COLLECTION, img.id!);
+      const { status, ...rest } = img;
+      batch.set(imgref, {
+        ...rest,
+        projectId: docRef.id,
+      });
+    });
+
+    await batch.commit();
     return docRef.id;
   } catch (error) {
     console.error('Error adding project:', error);
@@ -28,7 +41,6 @@ export async function addProject(project: Omit<Project, 'id' | 'createdAt' | 'up
   }
 }
 
-// Get all projects
 export async function getProjects(): Promise<Project[]> {
   try {
     const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
@@ -63,7 +75,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...parseDate(docSnap.data()) } as Project;
+      return { id: docSnap.id, ...parseDate(docSnap.data()), images: await getImages(docSnap.id) } as Project;
     } else {
       return null;
     }
@@ -80,7 +92,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
 
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
-      return { id: doc.id, ...parseDate(doc.data()) } as Project;
+      return { id: doc.id, ...parseDate(doc.data()), images: await getImages(doc.id) } as Project;
     } else {
       return null;
     }
@@ -90,30 +102,79 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   }
 }
 
+async function getImages(id: string): Promise<ImageData[]> {
+
+  try {
+    const q = query(collection(db, IMAGE_COLLECTION), where('projectId', '==', id))
+    const snapshots = await getDocs(q);
+    const imgs: ImageData[] = snapshots.docs.map(d => {
+      const data = d.data();
+      return {
+        ...data,
+        status: 'exists'
+      } as ImageData
+    })
+
+    return imgs;
+
+  } catch (error) {
+    console.error('Error getting project by slug:', error);
+    throw error;
+  }
+}
+
 export async function updateProject(id: string, project: Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>): Promise<void> {
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
+    const { images, ...rest } = project;
     await updateDoc(docRef, {
-      ...project,
+      ...rest,
       updatedAt: serverTimestamp()
     });
+
+    const batch = writeBatch(db);
+    images?.forEach((img) => {
+      const { status, ...data } = img
+      const imgref = doc(db, IMAGE_COLLECTION, img.id!);
+      switch (status) {
+        case 'new':
+          batch.set(imgref, {
+            ...data,
+            projectId: docRef.id,
+          });
+          break;
+        case 'deleted':
+          batch.delete(imgref)
+          break;
+        case 'exists':
+          break;
+      }
+    });
+
+    await batch.commit();
   } catch (error) {
     console.error('Error updating project:', error);
     throw error;
   }
 }
 
-// Delete a project
 export async function deleteProject(id: string): Promise<void> {
   try {
     await deleteDoc(doc(db, COLLECTION_NAME, id));
+    const q = query(collection(db, IMAGE_COLLECTION), where('projectId', '==', id))
+    const docs = await getDocs(q);
+
+    const batch = writeBatch(db);
+    docs.forEach(d => {
+      batch.delete(d.ref)
+    })
+    await batch.commit()
   } catch (error) {
     console.error('Error deleting project:', error);
     throw error;
   }
 }
 
-// Get featured projects
 export async function getFeaturedProjects(): Promise<Project[]> {
   try {
     const q = query(collection(db, COLLECTION_NAME), where('featured', '==', true));
