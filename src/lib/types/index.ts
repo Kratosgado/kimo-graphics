@@ -1,4 +1,4 @@
-export interface Category {
+export type Category = {
   id?: string;
   name: string;
   description: string;
@@ -7,7 +7,7 @@ export interface Category {
   updatedAt?: Date;
 }
 
-export interface ImageData {
+export type ImageData = {
   id?: string;
   base64: string;
   originalName: string;
@@ -16,7 +16,7 @@ export interface ImageData {
   status: 'new' | 'deleted' | 'exists';
 }
 
-export interface Project {
+export type Project = {
   id?: string;
   title: string;
   slug: string;

@@ -75,11 +75,13 @@ export async function processImageFiles(files: FileList): Promise<ImageData[]> {
     try {
       const base64 = await compressAndConvertToBase64(file);
       return {
+        id: file.name.replaceAll(' ', ''),
         base64,
         originalName: file.name,
         size: determineImageSize(file, index),
-        mimeType: file.type
-      };
+        mimeType: file.type,
+        status: 'new'
+      } as ImageData;
     } catch (error) {
       console.error(`Error processing image ${file.name}:`, error);
       throw error;

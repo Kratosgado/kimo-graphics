@@ -102,7 +102,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   }
 }
 
-async function getImages(id: string, take?: number): Promise<ImageData[]> {
+export async function getImages(id: string, take?: number): Promise<ImageData[]> {
 
   try {
     let q = query(collection(db, IMAGE_COLLECTION), where('projectId', '==', id))
@@ -119,7 +119,6 @@ async function getImages(id: string, take?: number): Promise<ImageData[]> {
     })
 
     return imgs;
-
   } catch (error) {
     console.error('Error getting project by slug:', error);
     throw error;
@@ -143,13 +142,13 @@ export async function updateProject(id: string, project: Partial<Omit<Project, '
         case 'new':
           batch.set(imgref, {
             ...data,
-            projectId: docRef.id,
+            projectId: id,
           });
           break;
         case 'deleted':
           batch.delete(imgref)
           break;
-        case 'exists':
+        default:
           break;
       }
     });
@@ -182,16 +181,13 @@ export async function getFeaturedProjects(): Promise<Project[]> {
   try {
     const q = query(collection(db, COLLECTION_NAME), where('featured', '==', true));
     const querySnapshot = await getDocs(q);
-    const projects: Project[] = [];
 
-    querySnapshot.docs.map(async (doc) => {
-      projects.push({
-        ...doc.data(),
-        id: doc.id,
-        images: await getImages(doc.id, 1)
-      } as Project)
-    });
-    return projects;
+    return Promise.all(querySnapshot.docs.map(async (doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      images: await getImages(doc.id, 1)
+    } as Project)
+    ));
   } catch (error) {
     console.error('Error getting featured projects:', error);
     throw error;

@@ -4,7 +4,8 @@
 		getProjects,
 		addProject,
 		updateProject,
-		deleteProject
+		deleteProject,
+		getImages
 	} from '$lib/firebase/projectService';
 	import { getCategories } from '$lib/firebase/categoryService';
 	import { processImageFiles } from '$lib/utils/imageUtils';
@@ -66,7 +67,7 @@
 		return category ? category.name : 'Unknown';
 	}
 
-	function editProject(project: Project) {
+	async function editProject(project: Project) {
 		isEditing = true;
 		currentProject = project;
 		formTitle = project.title;
@@ -78,7 +79,7 @@
 		formDescription = project.description || '';
 		formChallenge = project.challenge || '';
 		formSolution = project.solution || '';
-		formImages = project.images || [];
+		formImages = (await getImages(project.id!)) || [];
 	}
 
 	function createNewProject() {
@@ -137,7 +138,8 @@
 	}
 
 	function removeImage(index: number) {
-		formImages = formImages.filter((_, i) => i !== index);
+		const img = formImages[index];
+		formImages[index] = { ...img!, status: 'deleted' };
 	}
 
 	async function saveProject() {
@@ -430,35 +432,37 @@
 							{#if formImages.length > 0}
 								<div class="image-grid">
 									{#each formImages as image, i}
-										<div class="image-tile {image.size}">
-											<div class="image-container">
-												<img
-													src={image.base64 || '/placeholder.svg'}
-													alt={image.originalName}
-													class="w-full h-full object-cover"
-												/>
-												<div class="image-overlay">
-													<button
-														type="button"
-														class="btn btn-circle btn-sm btn-error"
-														on:click={() => removeImage(i)}
-													>
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															class="h-5 w-5"
-															viewBox="0 0 20 20"
-															fill="currentColor"
+										{#if image.status !== 'deleted'}
+											<div class="image-tile {image.size}">
+												<div class="image-container">
+													<img
+														src={image.base64 || '/placeholder.svg'}
+														alt={image.originalName}
+														class="w-full h-full object-cover"
+													/>
+													<div class="image-overlay">
+														<button
+															type="button"
+															class="btn btn-circle btn-sm btn-error"
+															on:click={() => removeImage(i)}
 														>
-															<path
-																fill-rule="evenodd"
-																d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-																clip-rule="evenodd"
-															/>
-														</svg>
-													</button>
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																class="h-5 w-5"
+																viewBox="0 0 20 20"
+																fill="currentColor"
+															>
+																<path
+																	fill-rule="evenodd"
+																	d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+																	clip-rule="evenodd"
+																/>
+															</svg>
+														</button>
+													</div>
 												</div>
 											</div>
-										</div>
+										{/if}
 									{/each}
 								</div>
 							{/if}
