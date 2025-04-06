@@ -159,10 +159,8 @@
 			};
 
 			if (currentProject) {
-				// Update existing project
 				await updateProject(currentProject.id!, projectData);
 			} else {
-				// Create new project
 				await addProject(projectData);
 			}
 

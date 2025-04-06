@@ -19,7 +19,6 @@
 			return projects;
 		}
 
-		console.log('executing');
 		const category = categories.find((c) => c.slug === categorySlug);
 		if (!category) return projects;
 

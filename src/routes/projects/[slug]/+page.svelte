@@ -5,7 +5,7 @@
 	import type { PageServerData } from './$types';
 	import type { ImageData, Project } from '$lib/types';
 	import { page } from '$app/state';
-	import { getProjectBySlug } from '$lib';
+	import { getProjectBySlug, Loading } from '$lib';
 
 	let project: Project | null = $state(null);
 	let imagesLoaded = $state(false);
@@ -37,9 +37,7 @@
 </svelte:head>
 
 {#if !project}
-	<div class="flex justify-center items-center py-20">
-		<span class="loading loading-spinner loading-lg text-primary"></span>
-	</div>
+	<Loading />
 {:else}
 	<div class="container mx-auto px-4 py-12">
 		<div class="max-w-4xl mx-auto">
@@ -136,9 +134,7 @@
 								</div>
 							</button>
 						{:else}
-							<div class="flex justify-center items-center py-20">
-								<span class="loading loading-spinner loading-lg text-primary"></span>
-							</div>
+							<Loading />
 						{/if}
 					{/each}
 				</div>

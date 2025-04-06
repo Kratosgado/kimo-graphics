@@ -3,6 +3,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, s
 import type { Project } from '$lib/types';
 
 const COLLECTION_NAME = 'projects';
+const IMAGE_COLLECTION = 'images';
 
 export function parseDate<T = Project>(data: any): T {
   for (const [k, v] of Object.entries<any>(data)) {
@@ -13,7 +14,6 @@ export function parseDate<T = Project>(data: any): T {
   return data;
 }
 
-// Add a new project
 export async function addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
@@ -42,7 +42,6 @@ export async function getProjects(): Promise<Project[]> {
   }
 }
 
-// Get projects by category ID
 export async function getProjectsByCategoryId(categoryId: string): Promise<Project[]> {
   try {
     const q = query(collection(db, COLLECTION_NAME), where('categoryId', '==', categoryId));
@@ -58,7 +57,6 @@ export async function getProjectsByCategoryId(categoryId: string): Promise<Proje
   }
 }
 
-// Get project by ID
 export async function getProjectById(id: string): Promise<Project | null> {
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
@@ -75,7 +73,6 @@ export async function getProjectById(id: string): Promise<Project | null> {
   }
 }
 
-// Get project by slug
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
     const q = query(collection(db, COLLECTION_NAME), where('slug', '==', slug));
@@ -93,7 +90,6 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   }
 }
 
-// Update a project
 export async function updateProject(id: string, project: Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>): Promise<void> {
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
